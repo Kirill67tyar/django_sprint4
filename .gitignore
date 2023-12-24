@@ -150,3 +150,7 @@ media/
 
 sent_emails/
 
+# draft
+tz_media/
+hot-keys.txt
+draft.txt
