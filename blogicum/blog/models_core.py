@@ -1,20 +1,6 @@
 import datetime as dt
 
 from django.db import models
-from django.urls import reverse_lazy
-from django.contrib.auth.models import User as U
-
-
-def get_edit_url(self):
-    return reverse_lazy(
-        'blog:edit_profile',
-        kwargs={
-            'username': self.username,
-        },
-    )
-
-
-U.add_to_class('get_edit_url', get_edit_url)
 
 
 class PublishedWithTimeStampModel(models.Model):
@@ -39,4 +25,3 @@ class ValidPostsManager(models.Manager):
             is_published=True,
             category__is_published=True,
         ).select_related('location', 'author', 'category',)
-

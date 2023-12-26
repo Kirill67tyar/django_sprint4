@@ -1,17 +1,16 @@
 from functools import wraps
 
 from django.http import Http404
-from django.core.paginator import Paginator
 from django.http import HttpResponseNotAllowed
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 
 User = get_user_model()
 
 
 def check_belonging_profile(func):
     """
-    Декоратор, который проверяет в dispatch, 
+    Декоратор, который проверяет в dispatch,
     что профиль, который редактирует пользователь
     принадлежит ему
     """
@@ -28,10 +27,10 @@ def check_belonging_profile(func):
     return wrapper
 
 
-def require_POST(func):
+def require_post(func):
     @wraps(func)
-    def wrapper(request, pk, *args, **kwargs):
+    def wrapper(request, post_id, *args, **kwargs):
         if request.method == 'POST':
-            return func(request, pk, *args, **kwargs)
+            return func(request, post_id, *args, **kwargs)
         return HttpResponseNotAllowed('Only POST method allowed')
     return wrapper

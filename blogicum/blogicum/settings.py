@@ -18,7 +18,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'blog.apps.BlogConfig',
     'pages.apps.PagesConfig',
-    'core.apps.CoreConfig',
     'django_bootstrap5',
     'django_extensions',
     'debug_toolbar',
@@ -109,6 +108,6 @@ LOGIN_REDIRECT_URL = 'blog:index'
 
 LOGIN_URL = 'login'
 
-CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
+CSRF_FAILURE_VIEW = 'pages.views.csrf_failure'
 
-INTERNAL_IPS = ['127.0.0.1',]
+INTERNAL_IPS = ['127.0.0.1', ]

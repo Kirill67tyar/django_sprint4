@@ -1,5 +1,3 @@
-import datetime as dt
-
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
@@ -58,7 +56,7 @@ class Post(PublishedWithTimeStampModel):
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
-        ordering = ('pub_date', 'title',)
+        ordering = ('-pub_date', )
         default_related_name = 'posts'
 
     def get_absolute_url(self):
@@ -66,6 +64,9 @@ class Post(PublishedWithTimeStampModel):
             'blog:post_detail',
             kwargs={'post_id': self.pk}
         )
+
+    def get_comment_count(self):
+        return self.comments.count()
 
     def __str__(self):
         return self.title[:15]
