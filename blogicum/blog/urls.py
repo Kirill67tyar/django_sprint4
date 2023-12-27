@@ -2,6 +2,7 @@ from django.urls import path
 
 from blog.views import (
     post_detail_view,
+    profile_update_view,
 
     add_comment,
     ProfileDetailView,
@@ -65,13 +66,13 @@ urlpatterns = [
         name='category_posts'
     ),
     path(
+        'profile/edit/',
+        ProfileUpdateView.as_view(),  # profile_update_view ProfileUpdateView.as_view()
+        name='edit_profile'
+    ),
+    path(
         'profile/<str:username>/',
         ProfileDetailView.as_view(),
         name='profile'
-    ),
-    path(
-        'profile/<str:username>/edit/',
-        ProfileUpdateView.as_view(),
-        name='edit_profile'
     ),
 ]

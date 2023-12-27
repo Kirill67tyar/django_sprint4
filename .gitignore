@@ -161,3 +161,4 @@ draft.py
 blogicum/pages/admin.py
 blogicum/pages/models.py
 blogicum/pages/tests.py
+blogicum/blog/tests.py

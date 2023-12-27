@@ -2,7 +2,9 @@ import datetime as dt
 from typing import Any
 
 from django.db.models import Count
-from django.http import HttpRequest
+from django.db.models.base import Model as Model
+from django.db.models.query import QuerySet
+from django.http import Http404, HttpRequest
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from django.http.response import HttpResponse
@@ -251,6 +253,7 @@ class ProfileDetailView(ByPageMixin, ProfileMixin, DetailView):
 class ProfileUpdateView(LoginRequiredMixin, ProfileMixin, UpdateView):
     template_name = 'blog/user.html'
     form_class = UserModelForm
+    model = User
 
     def get_success_url(self) -> str:
         return reverse_lazy(
@@ -260,9 +263,26 @@ class ProfileUpdateView(LoginRequiredMixin, ProfileMixin, UpdateView):
             }
         )
 
-    @check_belonging_profile
-    def dispatch(self,
-                 request: HttpRequest,
-                 *args: Any,
-                 **kwargs: Any) -> HttpResponse:
-        return super().dispatch(request, *args, **kwargs)
+    def get_object(self, queryset: QuerySet[Any] or None = ...) -> Model:
+        obj = get_object_or_404(
+            self.model,
+            pk=self.request.user.pk
+        )
+        return obj
+
+
+@login_required
+def profile_update_view(request):
+    username = request.user.username
+    user = get_object_or_404(User, username=username)
+    form = UserModelForm(request.POST or None, instance=user)
+    if form.is_valid():
+        form.save()
+        return redirect(
+            'blog:profile',
+            username=username
+        )
+    context = {
+        'form': form
+    }
+    return render(request, 'blog/user.html', context)
