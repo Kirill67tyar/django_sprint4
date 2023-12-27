@@ -1,15 +1,37 @@
-from django.db import models
-from django.contrib.auth import get_user_model
-from django.urls import reverse_lazy
+import datetime as dt
 
-from blog.models_core import (
-    ValidPostsManager,
-    PublishedWithTimeStampModel,
-)
+from django.db import models
+from django.urls import reverse_lazy
+from django.contrib.auth import get_user_model
 
 
 User = get_user_model()
 MAX_LENGTH = 256
+LENGTH_OUTPUT = 15
+
+
+class PublishedWithTimeStampModel(models.Model):
+    is_published = models.BooleanField(
+        default=True,
+        verbose_name='Опубликовано',
+        help_text='Снимите галочку, чтобы скрыть публикацию.'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Добавлено',
+    )
+
+    class Meta:
+        abstract = True
+
+
+class ValidPostsManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            pub_date__lte=dt.datetime.now(),
+            is_published=True,
+            category__is_published=True,
+        ).select_related('location', 'author', 'category',)
 
 
 class Post(PublishedWithTimeStampModel):
@@ -69,7 +91,7 @@ class Post(PublishedWithTimeStampModel):
         return self.comments.count()
 
     def __str__(self):
-        return self.title[:15]
+        return self.title[:LENGTH_OUTPUT]
 
 
 class Category(PublishedWithTimeStampModel):
@@ -94,7 +116,7 @@ class Category(PublishedWithTimeStampModel):
         verbose_name_plural = 'Категории'
 
     def __str__(self):
-        return self.title[:15]
+        return self.title[:LENGTH_OUTPUT]
 
 
 class Location(PublishedWithTimeStampModel):
@@ -108,7 +130,7 @@ class Location(PublishedWithTimeStampModel):
         verbose_name_plural = 'Местоположения'
 
     def __str__(self):
-        return self.name[:15]
+        return self.name[:LENGTH_OUTPUT]
 
 
 class Comment(models.Model):
@@ -137,4 +159,4 @@ class Comment(models.Model):
         ordering = ('created_at',)
 
     def __str__(self):
-        return f'{self.pk}) {self.author.username}: {self.text[:10]}'
+        return f'{self.pk}) {self.text[:LENGTH_OUTPUT]}'

@@ -4,6 +4,7 @@ from blog.models import (
     Category,
     Post,
     Location,
+    Comment,
 )
 
 
@@ -48,3 +49,6 @@ class LocationAdmin(admin.ModelAdmin):
         'is_published',
         'created_at',
     )
+
+
+admin.site.register(Comment)

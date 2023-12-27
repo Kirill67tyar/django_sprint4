@@ -149,9 +149,15 @@ dmypy.json
 media/
 
 sent_emails/
+blogicum/sent_emails/
 
 # draft
 tz_media/
 hot-keys.txt
 draft.txt
-blogicum/sent_emails/
+draft.py
+
+# from pages
+blogicum/pages/admin.py
+blogicum/pages/models.py
+blogicum/pages/tests.py
