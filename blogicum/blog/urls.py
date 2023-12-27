@@ -5,15 +5,15 @@ from blog.views import (
     profile_update_view,
 
     add_comment,
-    ProfileDetailView,
+    PostProfileListView,
     ProfileUpdateView,
     PostListView,
     PostCreateView,
     PostUpdateView,
     PostDeleteView,
-    CategoryDetailView,
     CommentUpdateView,
     CommentDeleteView,
+    PostByCategoryListView,
 )
 
 
@@ -22,7 +22,7 @@ app_name = 'blog'
 urlpatterns = [
     path(
         'posts/<int:post_id>/',
-        post_detail_view,
+        post_detail_view,  # PostDetailView.as_view() post_detail_view
         name='post_detail'
     ),
     path(
@@ -62,7 +62,7 @@ urlpatterns = [
     ),
     path(
         'category/<slug:category_slug>/',
-        CategoryDetailView.as_view(),
+        PostByCategoryListView.as_view(),  # PostByCategoryListView CategoryDetailView
         name='category_posts'
     ),
     path(
@@ -72,7 +72,7 @@ urlpatterns = [
     ),
     path(
         'profile/<str:username>/',
-        ProfileDetailView.as_view(),
+        PostProfileListView.as_view(),  # PostProfileListView ProfileDetailView
         name='profile'
     ),
 ]
