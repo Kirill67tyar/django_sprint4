@@ -1,7 +1,4 @@
-import datetime as dt
-
 from django.db import models
-from django.db.models import Count
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 
@@ -28,34 +25,9 @@ class PublishedWithTimeStampModel(models.Model):
 
 class ValidPostsManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(
-            category__is_published=True
-        ).select_related(
+        return super().get_queryset().select_related(
             'location', 'author', 'category',
         )  # .prefetch_related('comments')
-
-    def select(self, for_public=False, for_many=False, **kwargs):
-        qs = self.get_queryset().filter(**kwargs)
-        if for_public:
-            qs = qs.filter(
-                pub_date__lte=dt.datetime.now(),
-                is_published=True,
-            )
-        if for_many:
-            qs = qs.annotate(
-                comment_count=Count(
-                    'comments'
-                )).order_by('-pub_date')
-        return qs
-
-
-class OldValidPostsManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(
-            pub_date__lte=dt.datetime.now(),
-            is_published=True,
-            category__is_published=True,
-        ).select_related('location', 'author', 'category',)
 
 
 class Post(PublishedWithTimeStampModel):
@@ -97,8 +69,7 @@ class Post(PublishedWithTimeStampModel):
     )
 
     objects = models.Manager()
-    # valid_posts = ValidPostsManager()
-    valid_posts = OldValidPostsManager()
+    valid_posts = ValidPostsManager()
 
     class Meta:
         verbose_name = 'публикация'

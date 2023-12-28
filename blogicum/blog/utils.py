@@ -1,36 +1,28 @@
-from functools import wraps
+import datetime as dt
+from typing import Any
 
-from django.http import Http404
-from django.http import HttpResponseNotAllowed
-from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
-
-User = get_user_model()
+from django.utils import timezone
+from django.db.models import Count
+from django.db.models.query import QuerySet
 
 
-def check_belonging_profile(func):
-    """
-    Декоратор, который проверяет в dispatch,
-    что профиль, который редактирует пользователь
-    принадлежит ему
-    """
-    @wraps(func)
-    def wrapper(self, request, *args, **kwargs):
-        profile = get_object_or_404(
-            User,
-            username=kwargs['username'],
+def select(queryset: QuerySet[Any],
+           for_public=False,
+           for_many=False,
+           **kwargs) -> QuerySet:
+    if for_public:
+        NOW = timezone.make_aware(
+            dt.datetime.now(),
+            timezone.get_default_timezone()
         )
-        if request.user != profile:
-            raise Http404('page not found')
-        return func(self, request, *args, **kwargs)
-
-    return wrapper
-
-
-def require_post(func):
-    @wraps(func)
-    def wrapper(request, post_id, *args, **kwargs):
-        if request.method == 'POST':
-            return func(request, post_id, *args, **kwargs)
-        return HttpResponseNotAllowed('Only POST method allowed')
-    return wrapper
+        queryset = queryset.filter(
+            pub_date__lte=NOW,
+            is_published=True,
+            category__is_published=True,
+        )
+    if for_many:
+        queryset = queryset.annotate(
+            comment_count=Count(
+                'comments'
+            )).order_by('-pub_date')
+    return queryset.filter(**kwargs)

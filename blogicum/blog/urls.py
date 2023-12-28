@@ -1,9 +1,7 @@
-from django.urls import path
+from django.urls import include, path
 
 from blog.views import (
     post_detail_view,
-    profile_update_view,
-
     add_comment,
     PostProfileListView,
     ProfileUpdateView,
@@ -19,60 +17,75 @@ from blog.views import (
 
 app_name = 'blog'
 
-urlpatterns = [
+post_urls = [
     path(
-        'posts/<int:post_id>/',
-        post_detail_view,  # PostDetailView.as_view() post_detail_view
+        '<int:post_id>/',
+        post_detail_view,
         name='post_detail'
     ),
+    path(
+        'create/',
+        PostCreateView.as_view(),
+        name='create_post'
+    ),
+    path(
+        '<int:post_id>/edit/',
+        PostUpdateView.as_view(),
+        name='edit_post'
+    ),
+    path(
+        '<int:post_id>/delete/',
+        PostDeleteView.as_view(),
+        name='delete_post'
+    ),
+    path(
+        '<int:post_id>/create_comment/',
+        add_comment,
+        name='add_comment'
+    ),
+    path(
+        '<int:post_id>/edit_comment/<int:comment_id>/',
+        CommentUpdateView.as_view(),
+        name='edit_comment'
+    ),
+    path(
+        '<int:post_id>/delete_comment/<int:comment_id>/',
+        CommentDeleteView.as_view(),
+        name='delete_comment'
+    ),
+
+]
+
+profile_urls = [
+    path(
+        'edit/',
+        ProfileUpdateView.as_view(),
+        name='edit_profile'
+    ),
+    path(
+        '<str:username>/',
+        PostProfileListView.as_view(),
+        name='profile'
+    ),
+]
+
+urlpatterns = [
     path(
         '',
         PostListView.as_view(),
         name='index'
     ),
     path(
-        'posts/create/',
-        PostCreateView.as_view(),
-        name='create_post'
-    ),
-    path(
-        'posts/<int:post_id>/edit/',
-        PostUpdateView.as_view(),
-        name='edit_post'
-    ),
-    path(
-        'posts/<int:post_id>/delete/',
-        PostDeleteView.as_view(),
-        name='delete_post'
-    ),
-    path(
-        'posts/<int:post_id>/create_comment/',
-        add_comment,
-        name='add_comment'
-    ),
-    path(
-        'posts/<int:post_id>/edit_comment/<int:comment_id>/',
-        CommentUpdateView.as_view(),
-        name='edit_comment'
-    ),
-    path(
-        'posts/<int:post_id>/delete_comment/<int:comment_id>/',
-        CommentDeleteView.as_view(),
-        name='delete_comment'
+        'posts/',
+        include(post_urls),
     ),
     path(
         'category/<slug:category_slug>/',
-        PostByCategoryListView.as_view(),  # PostByCategoryListView CategoryDetailView
+        PostByCategoryListView.as_view(),
         name='category_posts'
     ),
     path(
-        'profile/edit/',
-        ProfileUpdateView.as_view(),  # profile_update_view ProfileUpdateView.as_view()
-        name='edit_profile'
-    ),
-    path(
-        'profile/<str:username>/',
-        PostProfileListView.as_view(),  # PostProfileListView ProfileDetailView
-        name='profile'
+        'profile/',
+        include(profile_urls),
     ),
 ]
