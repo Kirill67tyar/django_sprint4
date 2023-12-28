@@ -6,6 +6,7 @@ from blog.models import (
     Comment,
 )
 
+
 User = get_user_model()
 
 

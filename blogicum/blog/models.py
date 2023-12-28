@@ -23,13 +23,6 @@ class PublishedWithTimeStampModel(models.Model):
         abstract = True
 
 
-class ValidPostsManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().select_related(
-            'location', 'author', 'category',
-        )  # .prefetch_related('comments')
-
-
 class Post(PublishedWithTimeStampModel):
     title = models.CharField(
         max_length=MAX_LENGTH,
@@ -68,9 +61,6 @@ class Post(PublishedWithTimeStampModel):
         upload_to='posts_images',
     )
 
-    objects = models.Manager()
-    valid_posts = ValidPostsManager()
-
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
@@ -82,9 +72,6 @@ class Post(PublishedWithTimeStampModel):
             'blog:post_detail',
             kwargs={'post_id': self.pk}
         )
-
-    def get_comment_count(self):
-        return self.comments.count()
 
     def __str__(self):
         return self.title[:LENGTH_OUTPUT]

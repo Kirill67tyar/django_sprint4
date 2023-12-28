@@ -1,28 +1,26 @@
-import datetime as dt
-from typing import Any
-
 from django.utils import timezone
 from django.db.models import Count
 from django.db.models.query import QuerySet
 
+from blog.models import Post
 
-def select(queryset: QuerySet[Any],
-           for_public=False,
-           for_many=False,
-           **kwargs) -> QuerySet:
+
+def select_posts(for_public=False,
+                 for_many=False,
+                 **kwargs) -> QuerySet:
+    posts = Post.objects.select_related(
+        'location', 'author', 'category',
+    )
     if for_public:
-        NOW = timezone.make_aware(
-            dt.datetime.now(),
-            timezone.get_default_timezone()
-        )
-        queryset = queryset.filter(
-            pub_date__lte=NOW,
+        now = timezone.now()
+        posts = posts.filter(
+            pub_date__lte=now,
             is_published=True,
             category__is_published=True,
         )
     if for_many:
-        queryset = queryset.annotate(
+        posts = posts.annotate(
             comment_count=Count(
                 'comments'
             )).order_by('-pub_date')
-    return queryset.filter(**kwargs)
+    return posts.filter(**kwargs)

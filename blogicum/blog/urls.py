@@ -56,18 +56,6 @@ post_urls = [
 
 ]
 
-profile_urls = [
-    path(
-        'edit/',
-        ProfileUpdateView.as_view(),
-        name='edit_profile'
-    ),
-    path(
-        '<str:username>/',
-        PostProfileListView.as_view(),
-        name='profile'
-    ),
-]
 
 urlpatterns = [
     path(
@@ -85,7 +73,13 @@ urlpatterns = [
         name='category_posts'
     ),
     path(
-        'profile/',
-        include(profile_urls),
+        'edit/',
+        ProfileUpdateView.as_view(),
+        name='edit_profile'
+    ),
+    path(
+        'profile/<str:username>/',
+        PostProfileListView.as_view(),
+        name='profile',
     ),
 ]

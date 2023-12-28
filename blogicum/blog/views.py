@@ -1,4 +1,3 @@
-import datetime as dt
 from typing import Any
 
 from django.utils import timezone
@@ -22,7 +21,7 @@ from django.views.generic import (
     DeleteView,
 )
 
-from blog.utils import select
+from blog.utils import select_posts
 from blog.forms import (
     UserModelForm,
     PostModelForm,
@@ -50,8 +49,8 @@ class CommentMixin:
                  **kwargs: Any) -> HttpResponse:
         instance = get_object_or_404(
             self.model,
-            pk=kwargs['comment_id'],
-            post_id=kwargs['post_id'],
+            pk=self.kwargs['comment_id'],
+            post_id=self.kwargs['post_id'],
         )
         if instance.author != request.user:
             return redirect('blog:post_detail', post_id=kwargs['post_id'])
@@ -68,21 +67,12 @@ class PostUpdateDeleteMixin:
                  *args: Any,
                  **kwargs: Any) -> HttpResponse:
         instance = get_object_or_404(
-            Post,
-            pk=kwargs['post_id'],
+            self.model,
+            pk=self.kwargs['post_id'],
         )
         if instance.author != request.user:
             return redirect('blog:post_detail', post_id=kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
-
-
-class PostListMixin:
-    paginate_by = QUANTITY_POSTS
-    queryset = select(
-        Post.valid_posts.all(),
-        for_public=True,
-        for_many=True
-    )
 
 
 @login_required
@@ -108,7 +98,6 @@ class CommentUpdateView(LoginRequiredMixin, CommentMixin, UpdateView):
     form_class = CommentModelForm
 
     def get_success_url(self) -> str:
-
         return reverse_lazy(
             'blog:post_detail',
             kwargs={'post_id': self.object.post.pk, }
@@ -116,14 +105,13 @@ class CommentUpdateView(LoginRequiredMixin, CommentMixin, UpdateView):
 
 
 def post_detail_view(request, post_id):
-    posts_qs = Post.valid_posts.all().prefetch_related('comments')
+    posts_qs = select_posts().prefetch_related('comments')
     post = get_object_or_404(
         posts_qs,
         pk=post_id,
     )
     if request.user != post.author:
-        now = timezone.make_aware(
-            dt.datetime.now(), timezone.get_default_timezone())
+        now = timezone.now()
         if (
             (not post.is_published)
             or (not post.category.is_published)
@@ -176,54 +164,61 @@ class PostDeleteView(LoginRequiredMixin, PostUpdateDeleteMixin, DeleteView):
     success_url = reverse_lazy('blog:index')
 
 
-class PostListView(PostListMixin, ListView):
+class PostListView(ListView):
     template_name = 'blog/index.html'
+    paginate_by = QUANTITY_POSTS
+    queryset = select_posts(
+        for_public=True,
+        for_many=True,
+    )
 
 
-class PostByCategoryListView(PostListMixin, ListView):
+class PostByCategoryListView(ListView):
     template_name = 'blog/category.html'
+    paginate_by = QUANTITY_POSTS
 
-    def get_queryset(self) -> QuerySet[Any]:
-        posts = super().get_queryset()
-        self.category = get_object_or_404(
+    @property
+    def get_category(self):
+        return get_object_or_404(
             Category.objects.filter(is_published=True),
             slug=self.kwargs['category_slug']
         )
-        return posts.filter(
-            category=self.category,
+
+    def get_queryset(self) -> QuerySet[Any]:
+        return select_posts(
+            for_public=True,
+            for_many=True,
+            category=self.get_category,
         )
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['category'] = self.category
+        context['category'] = self.get_category
         return context
 
 
 class PostProfileListView(ListView):
-    queryset = Post.valid_posts.all()
     template_name = 'blog/profile.html'
     paginate_by = QUANTITY_POSTS
 
-    def get_queryset(self) -> QuerySet[Any]:
-        posts = super().get_queryset()
-        self.profile = get_object_or_404(
+    @property
+    def get_profile(self):
+        return get_object_or_404(
             User,
             username=self.kwargs['username']
         )
-        params = {
-            'for_many': True,
-            'author': self.profile,
-        }
-        if self.request.user != self.profile:
-            params['for_public'] = True
-        return select(
-            posts,
-            **params
+
+    def get_queryset(self) -> QuerySet[Any]:
+        profile = self.get_profile
+        return select_posts(
+            for_public=self.request.user != profile,
+            for_many=True,
+            author=profile,
         )
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['profile'] = self.profile
+        context['profile'] = self.get_profile
         return context
 
 
@@ -241,8 +236,4 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         )
 
     def get_object(self, queryset: QuerySet[Any] or None = ...) -> Model:
-        obj = get_object_or_404(
-            self.model,
-            pk=self.request.user.pk
-        )
-        return obj
+        return self.request.user
